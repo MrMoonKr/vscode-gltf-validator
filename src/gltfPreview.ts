@@ -5,12 +5,14 @@ import { ContextBase } from './contextBase';
 import { parseJsonMap, JsonMap } from './utilities';
 import { GLTF2 } from './GLTF2';
 
+
 export interface GltfPreviewPanel extends vscode.WebviewPanel {
     readonly textEditor: vscode.TextEditor;
     readonly ready: boolean;
 }
 
 interface GltfPreviewPanelInfo extends GltfPreviewPanel {
+
     textEditor: vscode.TextEditor;
     ready: boolean;
 
@@ -23,6 +25,7 @@ interface GltfPreviewPanelInfo extends GltfPreviewPanel {
 }
 
 export class GltfPreview extends ContextBase {
+
     private readonly _mainHtml: string;
     private readonly _babylonHtml: string;
     private readonly _cesiumHtml: string;
@@ -35,22 +38,35 @@ export class GltfPreview extends ContextBase {
     private _onDidChangeActivePanel: vscode.EventEmitter<GltfPreviewPanel | undefined> = new vscode.EventEmitter<GltfPreviewPanel | undefined>();
     private _onDidChangePanelReady: vscode.EventEmitter<GltfPreviewPanel> = new vscode.EventEmitter<GltfPreviewPanel>();
 
-    constructor(context: vscode.ExtensionContext) {
-        super(context);
+    constructor( context: vscode.ExtensionContext ) {
 
-        this._mainHtml = fs.readFileSync(this._context.asAbsolutePath('pages/previewModel.html'), 'utf-8');
-        this._babylonHtml = encodeURI(fs.readFileSync(this._context.asAbsolutePath('pages/babylonView.html'), 'utf-8'));
-        this._cesiumHtml = encodeURI(fs.readFileSync(this._context.asAbsolutePath('pages/cesiumView.html'), 'utf-8'));
-        this._filamentHtml = encodeURI(fs.readFileSync(this._context.asAbsolutePath('pages/filamentView.html'), 'utf-8'));
-        this._threeHtml = encodeURI(fs.readFileSync(this._context.asAbsolutePath('pages/threeView.html'), 'utf-8'));
+        super( context );
+
+        this._mainHtml = fs.readFileSync( this._context.asAbsolutePath( 'pages/previewModel.html' ), 'utf-8' );
+        this._babylonHtml = encodeURI( fs.readFileSync( this._context.asAbsolutePath( 'pages/babylonView.html' ), 'utf-8' ) );
+        this._cesiumHtml = encodeURI( fs.readFileSync( this._context.asAbsolutePath( 'pages/cesiumView.html' ), 'utf-8' ) );
+        this._filamentHtml = encodeURI( fs.readFileSync( this._context.asAbsolutePath( 'pages/filamentView.html' ), 'utf-8' ) );
+        this._threeHtml = encodeURI( fs.readFileSync( this._context.asAbsolutePath( 'pages/threeView.html' ), 'utf-8' ) );
     }
 
-    private asExtensionUriString(panel: GltfPreviewPanel, s: string): string {
-        return panel.webview.asWebviewUri(vscode.Uri.file(path.join(this.extensionRootPath, s))).toString();
+    /**
+     * 익스텐션 폴더내의 파일 경로를 WebView에서 사용할 수 있는 URI로 변환
+     * @param panel
+     * @param s 익스텐션내의 파일 경로 ex) 'pages/previewModel.html'
+     * @returns
+     */
+    private asExtensionUriString( panel: GltfPreviewPanel, s: string ): string {
+        return panel.webview.asWebviewUri( vscode.Uri.file( path.join( this.extensionRootPath, s ) ) ).toString();
     }
 
-    private asWebviewUriString(panel: GltfPreviewPanel, s: string): string {
-        return panel.webview.asWebviewUri(vscode.Uri.file(s)).toString();
+    /**
+     * 로컬파일 시스템의 파일 경로를 WebView에서 사용할 수 있는 URI로 변환
+     * @param panel
+     * @param s
+     * @returns
+     */
+    private asWebviewUriString( panel: GltfPreviewPanel, s: string ): string {
+        return panel.webview.asWebviewUri( vscode.Uri.file( s ) ).toString();
     }
 
     // Instructions to open DevTools on the glTF preview window:
@@ -65,25 +81,31 @@ export class GltfPreview extends ContextBase {
     // 4. In the top of the Console tab of DevTools, click the pull-down
     //    and change `top` to `active-frame (index.html)`.
 
-    public openPanel(gltfEditor: vscode.TextEditor): void {
+    /**
+     * 'gltf.previewModel' 핸들러에서 호출됩니다
+     * @param gltfEditor
+     */
+    public openPanel( gltfEditor: vscode.TextEditor ): void {
+
         const gltfFilePath = gltfEditor.document.fileName;
 
-        let panel = this._panels[gltfFilePath];
-        if (!panel) {
+        let panel = this._panels[ gltfFilePath ];
+        if ( !panel ) {
+
             let localResourceRoots = [
-                vscode.Uri.file(this._context.extensionPath),
-                vscode.Uri.file(path.dirname(gltfFilePath)),
+                vscode.Uri.file( this._context.extensionPath ),
+                vscode.Uri.file( path.dirname( gltfFilePath ) ),
             ];
 
-            const defaultBabylonReflection = this.getConfigResourceUrl('glTF.Babylon', 'environment', localResourceRoots);
-            const defaultFilamentReflection = this.getConfigResourceUrl('glTF.Filament', 'environment', localResourceRoots);
-            const defaultThreeReflection = this.getConfigResourceUrl('glTF.Three', 'environment', localResourceRoots);
+            const defaultBabylonReflection = this.getConfigResourceUrl( 'glTF.Babylon', 'environment', localResourceRoots );
+            const defaultFilamentReflection = this.getConfigResourceUrl( 'glTF.Filament', 'environment', localResourceRoots );
+            const defaultThreeReflection = this.getConfigResourceUrl( 'glTF.Three', 'environment', localResourceRoots );
 
-            panel = vscode.window.createWebviewPanel('gltf.preview', 'glTF Preview', vscode.ViewColumn.Two, {
+            panel = vscode.window.createWebviewPanel( 'gltf.preview', 'glTF Preview', vscode.ViewColumn.Two, {
                 enableScripts: true,
                 retainContextWhenHidden: true,
                 localResourceRoots: localResourceRoots,
-            }) as GltfPreviewPanelInfo;
+            } ) as GltfPreviewPanelInfo;
 
             panel._defaultBabylonReflection = defaultBabylonReflection;
             panel._defaultFilamentReflection = defaultFilamentReflection;
@@ -93,24 +115,24 @@ export class GltfPreview extends ContextBase {
 
             panel.textEditor = gltfEditor;
 
-            panel.onDidDispose(() => {
-                this.unwatchFiles(this._panels[gltfFilePath]);
-                delete this._panels[gltfFilePath];
+            panel.onDidDispose( () => {
+                this.unwatchFiles( this._panels[ gltfFilePath ] );
+                delete this._panels[ gltfFilePath ];
                 this.updateActivePanel();
-            });
+            } );
 
-            panel.onDidChangeViewState(() => {
+            panel.onDidChangeViewState( () => {
                 this.updateActivePanel();
-            });
+            } );
 
-            this._panels[gltfFilePath] = panel;
+            this._panels[ gltfFilePath ] = panel;
         }
 
         const gltfContent = gltfEditor.document.getText();
-        this.updatePanel(panel, gltfFilePath, gltfContent);
-        panel.reveal(vscode.ViewColumn.Two);
+        this.updatePanel( panel, gltfFilePath, gltfContent );
+        panel.reveal( vscode.ViewColumn.Two );
 
-        this.setActivePanel(panel);
+        this.setActivePanel( panel );
     }
 
     public get activePanel(): GltfPreviewPanel | undefined {
@@ -125,58 +147,62 @@ export class GltfPreview extends ContextBase {
 
     public readonly onDidChangeReadyState = this._onDidChangePanelReady.event;
 
-    private setActivePanel(activePanel: GltfPreviewPanel | undefined): void {
-        if (this._activePanel !== activePanel) {
-            this._activePanel = activePanel;
-            this._onDidChangeActivePanel.fire(activePanel);
+    private setActivePanel( activePanel: GltfPreviewPanel | undefined ): void {
 
-            if (activePanel) {
-                activePanel.webview.postMessage({ command: 'updateDebugMode' });
+        if ( this._activePanel !== activePanel ) {
+            this._activePanel = activePanel;
+            this._onDidChangeActivePanel.fire( activePanel );
+
+            if ( activePanel ) {
+                activePanel.webview.postMessage( { command: 'updateDebugMode' } );
             }
             else {
-                vscode.commands.executeCommand('setContext', 'gltfDebugActive', false);
+                vscode.commands.executeCommand( 'setContext', 'gltfDebugActive', false );
             }
         }
     }
 
     private updateActivePanel(): void {
-        const activePanel = Object.values(this._panels).find(panel => panel.active);
-        this.setActivePanel(activePanel);
+        const activePanel = Object.values( this._panels ).find( panel => panel.active );
+        this.setActivePanel( activePanel );
     }
 
-    private updatePanel(panel: GltfPreviewPanelInfo, gltfFilePath: string, gltfContent: string): void {
+    private updatePanel( panel: GltfPreviewPanelInfo, gltfFilePath: string, gltfContent: string ): void {
+
         let map: JsonMap<GLTF2.GLTF>;
         try {
-            map = parseJsonMap(gltfContent);
-        } catch (ex) {
-            vscode.window.showErrorMessage('' + ex);
+            map = parseJsonMap( gltfContent );
+        }
+        catch ( ex ) {
+            vscode.window.showErrorMessage( '' + ex );
             map = { data: { asset: { version: '2.0' } }, pointers: {} };
         }
+
         panel._jsonMap = map;
 
-        const gltfRootPath = this.asWebviewUriString(panel, path.dirname(gltfFilePath)) + '/';
-        const gltfFileName = path.basename(gltfFilePath);
+        const gltfRootPath = this.asWebviewUriString( panel, path.dirname( gltfFilePath ) ) + '/';
+        const gltfFileName = path.basename( gltfFilePath );
 
         const gltf = map.data;
         let gltfMajorVersion = 1;
-        if (gltf && gltf.asset && gltf.asset.version && gltf.asset.version[0] === '2') {
+        if ( gltf && gltf.asset && gltf.asset.version && gltf.asset.version[ 0 ] === '2' ) {
             gltfMajorVersion = 2;
         }
 
-        panel.title = `glTF Preview [${gltfFileName}]`;
+        panel.title = `glTF Preview [${ gltfFileName }]`;
         panel.webview.html = this.formatHtml(
             panel,
             gltfMajorVersion,
             gltfContent,
             gltfRootPath,
-            gltfFileName)
-            .replace(/\${webview.cspSource}/g, panel.webview.cspSource);
+            gltfFileName )
+            .replace( /\${webview.cspSource}/g, panel.webview.cspSource );
 
-        panel.webview.onDidReceiveMessage(message => {
-            this.onDidReceiveMessage(panel, message);
-        });
+        panel.webview.onDidReceiveMessage( message => {
+            this.onDidReceiveMessage( panel, message );
+        } );
 
-        this.watchFiles(panel);
+        this.watchFiles( panel );
     }
 
     private onDidReceiveMessage(panel: GltfPreviewPanelInfo, message: any): void {
@@ -211,12 +237,16 @@ export class GltfPreview extends ContextBase {
         }
     }
 
-    private formatHtml(panel: GltfPreviewPanelInfo, gltfMajorVersion: number, gltfContent: string, gltfRootPath: string,
-            gltfFileName: string): string {
-        const defaultEngine = vscode.workspace.getConfiguration('glTF').get('defaultV' + gltfMajorVersion + 'Engine');
+    private formatHtml( panel: GltfPreviewPanelInfo,
+                        gltfMajorVersion: number,
+                        gltfContent: string,
+                        gltfRootPath: string,
+                        gltfFileName: string ): string {
 
-        const dracoLoaderPath = this.asExtensionUriString(panel, 'engines/Draco/draco_decoder.js');
-        const dracoLoaderWasmPath = this.asExtensionUriString(panel, 'engines/Draco/draco_decoder.wasm');
+        const defaultEngine = vscode.workspace.getConfiguration( 'glTF' ).get( 'defaultV' + gltfMajorVersion + 'Engine' );
+
+        const dracoLoaderPath = this.asExtensionUriString( panel, 'engines/Draco/draco_decoder.js' );
+        const dracoLoaderWasmPath = this.asExtensionUriString( panel, 'engines/Draco/draco_decoder.wasm' );
 
         // These strings are available in JavaScript by looking up the ID.  They provide the extension's root
         // path (needed for locating additional assets), various settings, and the glTF name and contents.
@@ -305,8 +335,8 @@ export class GltfPreview extends ContextBase {
         watch(panel._jsonMap.data);
     }
 
-    private unwatchFiles(panel: GltfPreviewPanelInfo) {
-        for (const watcher of panel._watchers) {
+    private unwatchFiles( panel: GltfPreviewPanelInfo ) {
+        for ( const watcher of panel._watchers ) {
             watcher.close();
         }
 

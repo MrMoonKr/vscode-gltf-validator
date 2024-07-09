@@ -10,6 +10,10 @@ import { GltfWindow } from './gltfWindow';
 
 export declare type GltfNodeType = 'animation' | 'material' | 'mesh' | 'node' | 'scene' | 'skeleton' | 'skin' | 'texture' | 'root';
 
+
+/**
+ * glTF Node Custom Wrapper
+ */
 interface GltfNode {
     parent?: GltfNode;
     children: GltfNode[];
@@ -33,7 +37,11 @@ const knownTextureExtensions = [
     'MSFT_texture_dds'
 ];
 
+/**
+ * glTF Outline TreeDataProvider
+ */
 export class GltfOutline implements vscode.TreeDataProvider<GltfNode> {
+
     private tree: GltfNode;
     private editor: vscode.TextEditor;
     private gltf: GLTF2.GLTF;
@@ -83,54 +91,67 @@ export class GltfOutline implements vscode.TreeDataProvider<GltfNode> {
 
     private pauseUpdate = false;
 
-    constructor(private context: vscode.ExtensionContext, private gltfWindow: GltfWindow) {
-        this.gltfWindow.onDidChangeActiveTextEditor(() => {
+    /**
+     *
+     * @param context 익스텐션 컨텍스트
+     * @param gltfWindow 부모 윈도우
+     */
+    constructor( private context: vscode.ExtensionContext, private gltfWindow: GltfWindow ) {
+
+        this.gltfWindow.onDidChangeActiveTextEditor( () => {
             this.tryParseTreeAndNotify();
-        });
-        vscode.window.onDidChangeTextEditorSelection(() => {
+        } );
+
+        vscode.window.onDidChangeTextEditorSelection( () => {
             this.fillSelectedList();
-            if (!this.pauseUpdate && vscode.workspace.getConfiguration('glTF').get('expandOutlineWithSelection')) {
-                this._onDidChangeTreeData.fire(undefined);
+            if ( !this.pauseUpdate && vscode.workspace.getConfiguration( 'glTF' ).get( 'expandOutlineWithSelection' ) ) {
+                this._onDidChangeTreeData.fire( undefined );
             }
             this.pauseUpdate = false;
-        });
-        vscode.workspace.onDidChangeTextDocument(() => {
+        } );
+
+        vscode.workspace.onDidChangeTextDocument( () => {
             this.tryParseTreeAndNotify();
-        });
+        } );
 
         this.tryParseTreeAndNotify();
     }
 
-    select(range: vscode.Range): void {
+    select( range: vscode.Range ): void {
         this.pauseUpdate = true;
-        this.editor.selection = new vscode.Selection(range.start, range.end);
-        this.editor.revealRange(range, vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+        this.editor.selection = new vscode.Selection( range.start, range.end );
+        this.editor.revealRange( range, vscode.TextEditorRevealType.InCenterIfOutsideViewport );
     }
 
-    private walkTree(node: GltfNode, callback: (GltfNode) => void): void {
-        callback(node);
-        for (let child of node.children) {
-            this.walkTree(child, callback);
+    private walkTree( node: GltfNode, callback: ( GltfNode ) => void ): void {
+
+        callback( node );
+
+        for ( let child of node.children ) {
+            this.walkTree( child, callback );
         }
     }
 
     private fillSelectedList(): void {
-        this.selectedList.clear();
-        if (this.tree && vscode.workspace.getConfiguration('glTF').get('expandOutlineWithSelection')) {
-            for (let selection of this.editor.selections) {
-                this.walkTree(this.tree, (node: GltfNode) => {
-                    if (node.range && node.range.contains(selection)) {
+
+        this.selectedList.clear(); // Clear any previous selection
+
+        if ( this.tree && vscode.workspace.getConfiguration( 'glTF' ).get( 'expandOutlineWithSelection' ) ) {
+            for ( let selection of this.editor.selections ) {
+                this.walkTree( this.tree, ( node: GltfNode ) => {
+                    if ( node.range && node.range.contains( selection ) ) {
                         do {
-                            this.selectedList.add(node);
+                            this.selectedList.add( node );
                             node = node.parent;
-                        } while (node !== undefined);
+                        } while ( node !== undefined );
                     }
-                });
+                } );
             }
         }
     }
 
     private parseTree(): void {
+
         this.tree = null;
         this.gltf = null;
         this.pointers = null;
@@ -187,13 +208,15 @@ export class GltfOutline implements vscode.TreeDataProvider<GltfNode> {
     private tryParseTreeAndNotify() {
         try {
             this.parseTree();
-        } catch (ex) {
+        }
+        catch ( ex ) {
             this.tree = null;
             this.gltf = null;
             this.pointers = null;
-            console.log("Can't parse glTF into tree: " + ex.toString());
+            console.log( "Can't parse glTF into tree: " + ex.toString() );
         }
-        this._onDidChangeTreeData.fire(undefined);
+
+        this._onDidChangeTreeData.fire( undefined );
     }
 
     private populateSkinMap(skinIndex: number, skin: any) {

@@ -200,6 +200,6 @@ export interface JsonMap<T> {
     };
 }
 
-export function parseJsonMap(content: string): JsonMap<GLTF2.GLTF> {
-    return jsonMap.parse(content);
+export function parseJsonMap( content: string ): JsonMap<GLTF2.GLTF> {
+    return jsonMap.parse( content );
 }

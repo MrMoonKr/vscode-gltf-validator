@@ -1,5 +1,5 @@
 {
-    "name": "gltf-vscode",
+    "name": "vscode-gltf-validator",
     "displayName": "glTF Tools",
     "description": "Tools for glTF and GLB 3D models",
     "version": "2.4.0",
